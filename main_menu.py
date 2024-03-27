@@ -1,5 +1,6 @@
 import arcade
 import constants as c
+from game_view import GameView
 
 
 class MainMenu(arcade.View):
@@ -27,3 +28,15 @@ class MainMenu(arcade.View):
             font_size=c.MENU_FONT_SIZE,
             anchor_x="center"
         )
+
+    def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+        """
+        Advance to the Game View when the user clicks the main menu.
+        :param x:
+        :param y:
+        :param button:
+        :param modifiers:
+        :return:
+        """
+        game_view = GameView()
+        self.window.show_view(game_view)
