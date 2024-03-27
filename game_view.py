@@ -1,6 +1,7 @@
 import arcade
 import os
 import constants as c
+from player_sprite import PlayerSprite
 
 
 class GameView(arcade.View):
@@ -10,7 +11,7 @@ class GameView(arcade.View):
     def __init__(self):
         super(GameView, self).__init__()
 
-        # Set the file path to start with this program.
+        # Set the file path to start with this program
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
 
@@ -18,11 +19,15 @@ class GameView(arcade.View):
         self.tile_map = None
         self.scene = None
 
-    def setup(self):
+        # Player sprite
+        self.player_sprite = None
+        self.player_start_x = None
+        self.player_start_y = None
+
+    def create_map(self):
         """
-        Loads the scene and map and sets the game state.
+        Creates the game map and initializes the Scene.
         """
-        # Create the game map
         map_name = c.BASIC_MAP
         layer_options = {
             c.COINS_LAYER: {
@@ -39,12 +44,32 @@ class GameView(arcade.View):
             layer_options
         )
 
-        # Initialize the Scene from the map
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
-        # Set the background color based on the map
         if self.tile_map.background_color:
             arcade.set_background_color(self.tile_map.background_color)
+
+    def create_player_sprite(self):
+        """
+        Creates a sprite for the player, calculates its starting coordinates
+        and adds it to the scene.
+        """
+        self.player_sprite = PlayerSprite()
+        self.player_start_x = c.PLAYER_START_X * c.TILE_SCALING * self.tile_map.tile_width
+        self.player_start_y = c.PLAYER_START_Y * c.TILE_SCALING * self.tile_map.tile_height
+        self.player_sprite.center_x = self.player_start_x
+        self.player_sprite.center_y = self.player_start_y
+        self.scene.add_sprite(c.PLAYER_LAYER, self.player_sprite)
+
+    def setup(self):
+        """
+        Sets the initial game state.
+        """
+        # Create the game map and initialize the scene
+        self.create_map()
+
+        # Create the player sprite and set its initial coordinates
+        self.create_player_sprite()
 
     def on_show_view(self):
         """
