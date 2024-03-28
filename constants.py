@@ -6,6 +6,7 @@ SCREEN_TITLE = 'Simple Platformer'
 # Menu Display
 MAIN_MENU_TEXT = 'Main Menu - Click to play'
 MENU_FONT_SIZE = 30
+GAME_OVER_TEXT = 'Game Over - Click to restart'
 
 # Game Maps
 MAP_PATH = ':resources:tiled_maps/'
@@ -36,11 +37,13 @@ PLAYER_START_Y = 2
 PLAYER_RUN_SPEED_PX_PER_FRAME = 5
 PLAYER_JUMP_SPEED_PX_PER_FRAME = 30
 GRAVITY_ACCELERATION = 1.5
+OFF_MAP_Y = -100
 
 # Sound Effects
 SOUND_EFFECT_PATH = ':resources:sounds/'
 JUMP_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}jump1.wav'
 COIN_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}coin1.wav'
+GAME_OVER_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}gameover1.wav'
 
 # Camera Speed
 CAMERA_SPEED = 0.2

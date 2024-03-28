@@ -38,6 +38,7 @@ class GameView(arcade.View):
         # Sound effects
         self.jump_sound = arcade.load_sound(c.JUMP_SOUND_EFFECT)
         self.coin_sound = arcade.load_sound(c.COIN_SOUND_EFFECT)
+        self.game_over_sound = arcade.load_sound(c.GAME_OVER_SOUND_EFFECT)
 
         # Cameras
         self.main_camera = None
@@ -284,8 +285,50 @@ class GameView(arcade.View):
                 arcade.play_sound(self.coin_sound)
                 sprite.remove_from_sprite_lists()
 
+        # Game over if the player falls off the map
+        if self.player_sprite.center_y < c.OFF_MAP_Y:
+            arcade.play_sound(self.game_over_sound)
+            game_over = self.GameOverView()
+            self.window.show_view(game_over)
+            return
+
         self.center_camera_to_player()
 
         # Update the timer
         self.timer.update(delta_time)
+
+    class GameOverView(arcade.View):
+        """
+        Displays game over window
+        """
+        def on_show_view(self):
+            """
+            Display a black screen
+            """
+            arcade.set_background_color(arcade.color.BLACK)
+
+        def on_draw(self):
+            """
+            Display the game over screen with text
+            """
+            self.clear()
+            arcade.draw_text(
+                c.GAME_OVER_TEXT,
+                c.SCREEN_WIDTH / 2,
+                c.SCREEN_HEIGHT / 2,
+                arcade.color.WHITE,
+                c.GUI_FONT_SIZE,
+                anchor_x='center'
+            )
+
+        def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+            """
+            Restart the game when the user clicks the game over screen
+            :param x:
+            :param y:
+            :param button:
+            :param modifiers:
+            """
+            game_view = GameView()
+            self.window.show_view(game_view)
     
