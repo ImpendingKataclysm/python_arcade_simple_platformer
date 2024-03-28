@@ -128,6 +128,14 @@ class GameView(arcade.View):
             if self.physics_engine.is_on_ladder():
                 self.player_sprite.change_y = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
 
+        # Check for ladder with no movement
+        if self.physics_engine.is_on_ladder():
+            if (
+                (not self.up_pressed and not self.down_pressed)
+                or (self.up_pressed and self.down_pressed)
+            ):
+                self.player_sprite.change_y = 0
+
         # Check for left movement
         if self.left_pressed and not self.right_pressed:
             self.player_sprite.change_x = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
