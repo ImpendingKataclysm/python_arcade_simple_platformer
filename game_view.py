@@ -15,7 +15,7 @@ class GameView(arcade.View):
         file_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(file_path)
 
-        # Set up the map and scene
+        # Game map and Scene
         self.tile_map = None
         self.scene = None
 
@@ -24,16 +24,35 @@ class GameView(arcade.View):
         self.player_start_x = None
         self.player_start_y = None
 
+        # Key press tracking
+        self.left_pressed = False
+        self.right_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
+        self.jump_needs_reset = False
+
+        # Physics engine
+        self.physics_engine = None
+
+        # Sound effects
+        self.jump_sound = arcade.load_sound(c.JUMP_SOUND_EFFECT)
+
     def create_map(self):
         """
         Creates the game map and initializes the Scene.
         """
-        map_name = c.BASIC_MAP
+        map_name = c.LADDER_MAP
         layer_options = {
             c.COINS_LAYER: {
                 'use_spatial_hash': True,
             },
             c.PLATFORMS_LAYER: {
+                'use_spatial_hash': True
+            },
+            c.MOVING_PLATFORMS_LAYER: {
+                'use_spatial_hash': False
+            },
+            c.LADDERS_LAYER: {
                 'use_spatial_hash': True
             },
         }
@@ -71,6 +90,42 @@ class GameView(arcade.View):
         # Create the player sprite and set its initial coordinates
         self.create_player_sprite()
 
+        # Create the physics engine
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
+            self.player_sprite,
+            platforms=self.scene[c.MOVING_PLATFORMS_LAYER],
+            gravity_constant=c.GRAVITY_ACCELERATION,
+            ladders=self.scene[c.LADDERS_LAYER],
+            walls=self.scene[c.PLATFORMS_LAYER]
+        )
+
+    def update_player_movement(self):
+        """
+        Moves the player sprite in response to keyboard inputs.
+        """
+        self.player_sprite.change_x = 0
+        self.player_sprite.change_y = 0
+
+        # Check for upward movement
+        if self.up_pressed and not self.down_pressed:
+            # Check for ability to jump
+            if self.physics_engine.can_jump() and not self.jump_needs_reset:
+                self.player_sprite.change_y = c.PLAYER_JUMP_SPEED_PX_PER_FRAME
+                self.jump_needs_reset = True
+                arcade.play_sound(self.jump_sound)
+        # Check for downward movement
+        elif self.down_pressed and not self.up_pressed:
+            print('moving down')
+
+        # Check for left movement
+        if self.left_pressed and not self.right_pressed:
+            self.player_sprite.change_x = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
+        # Check for right movement
+        elif self.right_pressed and not self.left_pressed:
+            self.player_sprite.change_x = c.PLAYER_RUN_SPEED_PX_PER_FRAME
+        else:
+            self.player_sprite.change_x = 0
+
     def on_show_view(self):
         """
         Display the game in its initial state.
@@ -83,4 +138,47 @@ class GameView(arcade.View):
         """
         self.clear()
         self.scene.draw()
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        """
+        Handle keyboard inputs for player sprite movement
+        :param symbol: The key entered by the user
+        :param modifiers:
+        """
+        if symbol == arcade.key.UP or symbol == arcade.key.W:
+            self.up_pressed = True
+        elif symbol == arcade.key.DOWN or symbol == arcade.key.S:
+            self.down_pressed = True
+        elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
+            self.left_pressed = True
+        elif symbol == arcade.key.RIGHT or symbol == arcade.key.D:
+            self.right_pressed = True
+
+        self.update_player_movement()
+
+    def on_key_release(self, _symbol: int, _modifiers: int):
+        """
+        Handle released keyboard inputs by halting movement and ensuring jumping
+        is enabled.
+        :param _symbol: The key released by the user
+        :param _modifiers:
+        """
+        if _symbol == arcade.key.UP or _symbol == arcade.key.W:
+            self.up_pressed = False
+            self.jump_needs_reset = False
+        elif _symbol == arcade.key.DOWN or _symbol == arcade.key.S:
+            self.down_pressed = False
+        elif _symbol == arcade.key.LEFT or _symbol == arcade.key.A:
+            self.left_pressed = False
+        elif _symbol == arcade.key.RIGHT or _symbol == arcade.key.D:
+            self.right_pressed = False
+
+        self.update_player_movement()
+
+    def on_update(self, delta_time: float):
+        """
+        Update the physics engine and sprite animations.
+        :param delta_time:
+        """
+        self.physics_engine.update()
     

@@ -7,14 +7,18 @@ SCREEN_TITLE = 'Simple Platformer'
 MAIN_MENU_TEXT = 'Main Menu - Click to play'
 MENU_FONT_SIZE = 30
 
-# Game Map
+# Game Maps
 MAP_PATH = ':resources:tiled_maps/'
 BASIC_MAP = f'{MAP_PATH}map.json'
+LADDER_MAP = f'{MAP_PATH}map_with_ladders.json'
 
 # Map Layers
 COINS_LAYER = 'Coins'
 PLATFORMS_LAYER = 'Platforms'
 PLAYER_LAYER = 'Player'
+BACKGROUND_LAYER = 'Background'
+LADDERS_LAYER = 'Ladders'
+MOVING_PLATFORMS_LAYER = 'Moving Platforms'
 
 # Sprite Scaling
 TILE_SCALING = 0.5
@@ -26,3 +30,12 @@ PLAYER_SPRITE_FOLDER = 'female_adventurer'
 PLAYER_SPRITE_FILE = 'femaleAdventurer'
 PLAYER_START_X = 2
 PLAYER_START_Y = 2
+
+# Sprite Movement
+PLAYER_RUN_SPEED_PX_PER_FRAME = 5
+PLAYER_JUMP_SPEED_PX_PER_FRAME = 30
+GRAVITY_ACCELERATION = 1.5
+
+# Sound Effects
+SOUND_EFFECT_PATH = ':resources:sounds/'
+JUMP_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}jump1.wav'
