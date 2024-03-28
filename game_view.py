@@ -36,9 +36,11 @@ class GameView(arcade.View):
 
         # Sound effects
         self.jump_sound = arcade.load_sound(c.JUMP_SOUND_EFFECT)
+        self.coin_sound = arcade.load_sound(c.COIN_SOUND_EFFECT)
 
         # Cameras
         self.main_camera = None
+        self.gui_camera = None
 
     def create_map(self):
         """
@@ -104,6 +106,9 @@ class GameView(arcade.View):
 
         # Create the main camera for the game viewport
         self.main_camera = arcade.Camera(self.window.width, self.window.height)
+
+        # Create the camera for displaying data in the GUI
+        self.gui_camera = arcade.Camera(self.window.width, self.window.height)
 
     def update_player_movement(self):
         """
@@ -225,4 +230,16 @@ class GameView(arcade.View):
         """
         self.physics_engine.update()
         self.center_camera_to_player()
+
+        # Check if the player has collided with any enemies or coins
+        player_collision_list = arcade.check_for_collision_with_lists(
+            self.player_sprite,
+            [self.scene[c.COINS_LAYER],]
+        )
+
+        for sprite in player_collision_list:
+            # Check for coins
+            if self.scene[c.COINS_LAYER] in sprite.sprite_lists:
+                arcade.play_sound(self.coin_sound)
+                sprite.remove_from_sprite_lists()
     

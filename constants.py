@@ -39,6 +39,7 @@ GRAVITY_ACCELERATION = 1.5
 # Sound Effects
 SOUND_EFFECT_PATH = ':resources:sounds/'
 JUMP_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}jump1.wav'
+COIN_SOUND_EFFECT = f'{SOUND_EFFECT_PATH}coin1.wav'
 
 # Camera Speed
 CAMERA_SPEED = 0.2
