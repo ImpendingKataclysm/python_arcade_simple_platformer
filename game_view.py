@@ -2,6 +2,7 @@ import arcade
 import os
 import constants as c
 from player_sprite import PlayerSprite
+from timer import Timer
 
 
 class GameView(arcade.View):
@@ -44,6 +45,9 @@ class GameView(arcade.View):
 
         # Player Score
         self.score = 0
+
+        # Timer
+        self.timer = None
 
     def create_map(self):
         """
@@ -94,6 +98,9 @@ class GameView(arcade.View):
         """
         # Create the game map and initialize the scene
         self.create_map()
+
+        # Set up the timer
+        self.timer = Timer()
 
         # Create the player sprite and set its initial coordinates
         self.create_player_sprite()
@@ -217,6 +224,9 @@ class GameView(arcade.View):
             c.GUI_FONT_SIZE
         )
 
+        # Display the timer
+        self.timer.timer_text.draw()
+
     def on_key_press(self, symbol: int, modifiers: int):
         """
         Handle keyboard inputs for player sprite movement
@@ -275,4 +285,7 @@ class GameView(arcade.View):
                 sprite.remove_from_sprite_lists()
 
         self.center_camera_to_player()
+
+        # Update the timer
+        self.timer.update(delta_time)
     
