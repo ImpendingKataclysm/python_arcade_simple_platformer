@@ -114,14 +114,19 @@ class GameView(arcade.View):
 
         # Check for upward movement
         if self.up_pressed and not self.down_pressed:
+            # Check for a ladder
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = c.PLAYER_RUN_SPEED_PX_PER_FRAME
             # Check for ability to jump
-            if self.physics_engine.can_jump() and not self.jump_needs_reset:
+            elif self.physics_engine.can_jump() and not self.jump_needs_reset:
                 self.player_sprite.change_y = c.PLAYER_JUMP_SPEED_PX_PER_FRAME
                 self.jump_needs_reset = True
                 arcade.play_sound(self.jump_sound)
         # Check for downward movement
         elif self.down_pressed and not self.up_pressed:
-            print('moving down')
+            # Check for ladder
+            if self.physics_engine.is_on_ladder():
+                self.player_sprite.change_y = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
 
         # Check for left movement
         if self.left_pressed and not self.right_pressed:
@@ -133,6 +138,10 @@ class GameView(arcade.View):
             self.player_sprite.change_x = 0
 
     def center_camera_to_player(self):
+        """
+        Focus the game camera on the player sprite to scroll the viewport as the
+        player moves across the map.
+        """
         screen_center_x = self.player_sprite.center_x - (
             self.main_camera.viewport_width / 2
         )
