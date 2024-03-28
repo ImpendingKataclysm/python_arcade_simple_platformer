@@ -37,6 +37,9 @@ class GameView(arcade.View):
         # Sound effects
         self.jump_sound = arcade.load_sound(c.JUMP_SOUND_EFFECT)
 
+        # Cameras
+        self.main_camera = None
+
     def create_map(self):
         """
         Creates the game map and initializes the Scene.
@@ -99,6 +102,9 @@ class GameView(arcade.View):
             walls=self.scene[c.PLATFORMS_LAYER]
         )
 
+        # Create the main camera for the game viewport
+        self.main_camera = arcade.Camera(self.window.width, self.window.height)
+
     def update_player_movement(self):
         """
         Moves the player sprite in response to keyboard inputs.
@@ -126,6 +132,25 @@ class GameView(arcade.View):
         else:
             self.player_sprite.change_x = 0
 
+    def center_camera_to_player(self):
+        screen_center_x = self.player_sprite.center_x - (
+            self.main_camera.viewport_width / 2
+        )
+
+        screen_center_y = self.player_sprite.center_y - (
+            self.main_camera.viewport_height / 2
+        )
+
+        if screen_center_x < 0:
+            screen_center_x = 0
+
+        if screen_center_y < 0:
+            screen_center_y = 0
+
+        player_center = screen_center_x, screen_center_y
+
+        self.main_camera.move_to(player_center, c.CAMERA_SPEED)
+
     def on_show_view(self):
         """
         Display the game in its initial state.
@@ -137,6 +162,7 @@ class GameView(arcade.View):
         Render the game map and sprites.
         """
         self.clear()
+        self.main_camera.use()
         self.scene.draw()
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -181,4 +207,5 @@ class GameView(arcade.View):
         :param delta_time:
         """
         self.physics_engine.update()
+        self.center_camera_to_player()
     
