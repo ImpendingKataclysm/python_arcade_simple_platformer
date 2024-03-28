@@ -42,6 +42,9 @@ class GameView(arcade.View):
         self.main_camera = None
         self.gui_camera = None
 
+        # Player Score
+        self.score = 0
+
     def create_map(self):
         """
         Creates the game map and initializes the Scene.
@@ -109,6 +112,9 @@ class GameView(arcade.View):
 
         # Create the camera for displaying data in the GUI
         self.gui_camera = arcade.Camera(self.window.width, self.window.height)
+
+        # Set the player score to 0
+        self.score = 0
 
     def update_player_movement(self):
         """
@@ -187,6 +193,30 @@ class GameView(arcade.View):
         self.main_camera.use()
         self.scene.draw()
 
+        # Activate the GUI camera
+        self.gui_camera.use()
+
+        # Display the score in the GUI
+        score_text = f'Score: {self.score}'
+        arcade.draw_text(
+            score_text,
+            c.SCORE_TEXT_START_X,
+            c.GUI_TEXT_START_Y,
+            arcade.csscolor.MINT_CREAM,
+            c.GUI_FONT_SIZE
+        )
+
+        # Display the number of coins remaining
+        coins_left = len(self.scene[c.COINS_LAYER])
+        coin_text = f'Coins left: {coins_left}'
+        arcade.draw_text(
+            coin_text,
+            c.COIN_TEXT_START_X,
+            c.GUI_TEXT_START_Y,
+            arcade.csscolor.MINT_CREAM,
+            c.GUI_FONT_SIZE
+        )
+
     def on_key_press(self, symbol: int, modifiers: int):
         """
         Handle keyboard inputs for player sprite movement
@@ -229,17 +259,20 @@ class GameView(arcade.View):
         :param delta_time:
         """
         self.physics_engine.update()
-        self.center_camera_to_player()
 
         # Check if the player has collided with any enemies or coins
         player_collision_list = arcade.check_for_collision_with_lists(
             self.player_sprite,
-            [self.scene[c.COINS_LAYER],]
+            [self.scene[c.COINS_LAYER]]
         )
 
         for sprite in player_collision_list:
             # Check for coins
             if self.scene[c.COINS_LAYER] in sprite.sprite_lists:
+                points = int(sprite.properties[c.COINS_POINTS_PROP])
+                self.score += points
                 arcade.play_sound(self.coin_sound)
                 sprite.remove_from_sprite_lists()
+
+        self.center_camera_to_player()
     
