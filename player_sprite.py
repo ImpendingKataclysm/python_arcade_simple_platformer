@@ -19,7 +19,7 @@ class PlayerSprite(CharacterSprite):
         Update the player sprite's animation depending on the direction it's
         facing and whether it is walking, jumping, climbing or falling.
         :param delta_time:
-        :return:
+        :return: None
         """
         # Determine the sprite's direction
         self.set_face_direction()
@@ -28,8 +28,18 @@ class PlayerSprite(CharacterSprite):
         if self.change_y > 0 and not self.is_on_ladder:
             self.texture = self.jump_texture_pair[self.direction]
             return
+        # Falling animation
         elif self.change_y < 0 and not self.is_on_ladder:
             self.texture = self.fall_texture_pair[self.direction]
             return
 
-        self.texture = self.idle_texture_pair[self.direction]
+        # Idle animation
+        if self.set_idle_animation():
+            return
+
+        # Walking animation
+        self.cur_texture_index += 1
+        if self.cur_texture_index >= c.WALK_TEXTURES_TOTAL:
+            self.cur_texture_index = 0
+
+        self.texture = self.walk_textures[self.cur_texture_index][self.direction]

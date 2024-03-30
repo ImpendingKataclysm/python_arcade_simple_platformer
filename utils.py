@@ -15,7 +15,12 @@ def load_texture_pair(filename):
     ]
 
 
-def get_walk_textures(path):
+def load_walk_textures(path):
+    """
+    Loads a given sprite's walk textures.
+    :param path: The file path for the sprite
+    :return: A list of walk textures for the given sprite
+    """
     walk_textures = []
     for i in range(c.WALK_TEXTURES_TOTAL):
         texture = load_texture_pair(f'{path}_walk{i}.png')

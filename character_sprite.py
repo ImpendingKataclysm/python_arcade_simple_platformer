@@ -1,6 +1,6 @@
 import arcade
 import constants as c
-from utils import load_texture_pair
+import utils
 
 
 class CharacterSprite(arcade.Sprite):
@@ -21,13 +21,16 @@ class CharacterSprite(arcade.Sprite):
         self.cur_texture_index = c.INITIAL_TEXTURE_INDEX
 
         # Idle animation textures
-        self.idle_texture_pair = load_texture_pair(f'{self.main_path}_idle.png')
+        self.idle_texture_pair = utils.load_texture_pair(f'{self.main_path}_idle.png')
 
         # Jump animation textures
-        self.jump_texture_pair = load_texture_pair(f'{self.main_path}_jump.png')
+        self.jump_texture_pair = utils.load_texture_pair(f'{self.main_path}_jump.png')
 
         # Fall animation textures
-        self.fall_texture_pair = load_texture_pair(f'{self.main_path}_fall.png')
+        self.fall_texture_pair = utils.load_texture_pair(f'{self.main_path}_fall.png')
+
+        # Walk animation textures
+        self.walk_textures = utils.load_walk_textures(self.main_path)
 
         # Initial texture
         self.texture = self.idle_texture_pair[self.direction]
