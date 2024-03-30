@@ -277,6 +277,13 @@ class GameView(arcade.View):
         else:
             self.player_sprite.can_jump = True
 
+        # Update player sprite climbing animation
+        if self.physics_engine.is_on_ladder() and not self.physics_engine.can_jump():
+            self.player_sprite.is_on_ladder = True
+            self.update_player_movement()
+        else:
+            self.player_sprite.is_on_ladder = False
+
         # Update scene object animations
         self.scene.update_animation(
             delta_time,

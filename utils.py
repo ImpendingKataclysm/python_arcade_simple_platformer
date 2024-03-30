@@ -27,3 +27,10 @@ def load_walk_textures(path):
         walk_textures.append(texture)
 
     return walk_textures
+
+
+def load_climb_textures(path):
+    return [
+            arcade.load_texture(f'{path}_climb{c.INITIAL_TEXTURE_INDEX}.png'),
+            arcade.load_texture(f'{path}_climb{c.INITIAL_TEXTURE_INDEX + 1}.png')
+        ]

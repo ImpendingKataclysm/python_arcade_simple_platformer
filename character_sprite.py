@@ -32,6 +32,9 @@ class CharacterSprite(arcade.Sprite):
         # Walk animation textures
         self.walk_textures = utils.load_walk_textures(self.main_path)
 
+        # Climb animation textures
+        self.climb_texture_pair = utils.load_climb_textures(self.main_path)
+
         # Initial texture
         self.texture = self.idle_texture_pair[self.direction]
 
