@@ -271,6 +271,24 @@ class GameView(arcade.View):
         """
         self.physics_engine.update()
 
+        # Update player sprite jumping animation
+        if self.physics_engine.can_jump():
+            self.player_sprite.can_jump = False
+        else:
+            self.player_sprite.can_jump = True
+
+        # Update scene object animations
+        self.scene.update_animation(
+            delta_time,
+            [
+                c.COINS_LAYER,
+                c.BACKGROUND_LAYER,
+                c.PLAYER_LAYER
+            ]
+        )
+
+        self.scene.update([c.MOVING_PLATFORMS_LAYER])
+
         # Check if the player has collided with any enemies or coins
         player_collision_list = arcade.check_for_collision_with_lists(
             self.player_sprite,
