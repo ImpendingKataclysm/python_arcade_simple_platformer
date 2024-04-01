@@ -266,22 +266,35 @@ class GameView(arcade.View):
         self.scene.update([c.MOVING_PLATFORMS_LAYER, c.ENEMIES_LAYER])
         self.check_enemy_boundaries()
 
+    def collect_coin(self, coin_sprite):
+        """
+        'Collect' a coin sprite by removing it from the map and increasing the
+        player's score by the coins 'Points' property.
+        :param coin_sprite:
+        :return:
+        """
+        points = int(coin_sprite.properties['Points'])
+        self.score += points
+        arcade.play_sound(self.coin_sound)
+        coin_sprite.remove_from_sprite_lists()
+
     def check_collisions(self):
         """
-        Checks whether the player has collided with any coin sprites and collects
-        them if so.
+        Checks whether the player sprite has collided with any coin sprites or
+        enemy sprites. If the player has touched a coin, the coin is 'collected',
+        but if the player has touched an enemy, the game is over.
         """
         player_collision_list = arcade.check_for_collision_with_lists(
             self.player_sprite,
-            [self.scene[c.COINS_LAYER]]
+            [self.scene[c.COINS_LAYER], self.scene[c.ENEMIES_LAYER]]
         )
 
         for sprite in player_collision_list:
-            if self.scene[c.COINS_LAYER] in sprite.sprite_lists:
-                points = int(sprite.properties[c.COINS_POINTS_PROP])
-                self.score += points
-                arcade.play_sound(self.coin_sound)
-                sprite.remove_from_sprite_lists()
+            if self.scene[c.ENEMIES_LAYER] in sprite.sprite_lists:
+                self.game_over()
+                return
+            elif self.scene[c.COINS_LAYER] in sprite.sprite_lists:
+                self.collect_coin(sprite)
 
     def on_show_view(self):
         """

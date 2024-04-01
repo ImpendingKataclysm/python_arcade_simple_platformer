@@ -21,7 +21,6 @@ BACKGROUND_LAYER = 'Background'
 LADDERS_LAYER = 'Ladders'
 MOVING_PLATFORMS_LAYER = 'Moving Platforms'
 ENEMIES_LAYER = 'Enemies'
-COINS_POINTS_PROP = 'Points'
 
 # Sprite Scaling
 TILE_SCALING = 0.5

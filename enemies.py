@@ -9,8 +9,6 @@ class Enemy(CharacterSprite):
     def __init__(self, name_folder, name_file):
         super(Enemy, self).__init__(name_folder, name_file)
 
-        self.walk_update_interval = 0
-
     def update_animation(self, delta_time: float = 1 / 60):
         """
         Animate the enemy sprite's animations based on the direction it is
