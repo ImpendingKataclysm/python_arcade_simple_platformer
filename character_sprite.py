@@ -40,6 +40,9 @@ class CharacterSprite(arcade.Sprite):
         # Initial texture
         self.texture = self.idle_texture_pair[self.direction]
 
+        # Hit box
+        self.hit_box = self.texture.hit_box_points
+
     def set_face_direction(self):
         """
         Ensure that the sprite is facing its direction of movement.

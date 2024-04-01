@@ -1,3 +1,4 @@
+import arcade
 import constants as c
 from character_sprite import CharacterSprite
 
@@ -79,3 +80,21 @@ class PlayerSprite(CharacterSprite):
             return
 
         self.set_walk_animation()
+
+    def shoot_bullet(self):
+        """
+        Create a bullet sprite starting at the player's current position and
+        moving in the direction in which the player is facing.
+        :return: The bullet sprite.
+        """
+        bullet = arcade.Sprite(c.BULLET_SPRITE_PATH, c.LASER_SCALING)
+
+        if self.direction == c.FACING_RIGHT:
+            bullet.change_x = c.BULLET_SPEED_PX_PER_FRAME
+        else:
+            bullet.change_x = -c.BULLET_SPEED_PX_PER_FRAME
+
+        bullet.center_x = self.center_x
+        bullet.center_y = self.center_y
+
+        return bullet

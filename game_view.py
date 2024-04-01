@@ -34,6 +34,7 @@ class GameView(arcade.View):
         self.up_pressed = False
         self.down_pressed = False
         self.jump_needs_reset = False
+        self.shoot_pressed = False
 
         # Physics engine
         self.physics_engine = None
@@ -42,6 +43,8 @@ class GameView(arcade.View):
         self.jump_sound = arcade.load_sound(c.JUMP_SOUND_EFFECT)
         self.coin_sound = arcade.load_sound(c.COIN_SOUND_EFFECT)
         self.game_over_sound = arcade.load_sound(c.GAME_OVER_SOUND_EFFECT)
+        self.shoot_sound = arcade.load_sound(c.SHOOT_SOUND_EFFECT)
+        self.hit_sound = arcade.load_sound(c.HIT_SOUND_EFFECT)
 
         # Cameras
         self.main_camera = None
@@ -52,6 +55,10 @@ class GameView(arcade.View):
 
         # Timer
         self.timer = None
+
+        # Shooting mechanics
+        self.can_shoot = False
+        self.shoot_timer = 0
 
     def create_map(self):
         """
@@ -145,9 +152,12 @@ class GameView(arcade.View):
         self.gui_camera = arcade.Camera(self.window.width, self.window.height)
         self.timer = Timer()
         self.score = 0
+        self.can_shoot = True
+        self.shoot_timer = 0
 
         self.create_player_sprite()
         self.create_enemy_sprites()
+        self.scene.add_sprite_list(c.BULLETS_LAYER)
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
@@ -240,6 +250,11 @@ class GameView(arcade.View):
             self.player_sprite.is_on_ladder = False
 
     def check_enemy_boundaries(self):
+        """
+        Reverse the enemy sprite's direction of movement if it reaches the end
+        of its right or left boundary.
+        :return:
+        """
         for enemy in self.scene[c.ENEMIES_LAYER]:
             if (
                 enemy.boundary_right and
@@ -252,18 +267,42 @@ class GameView(arcade.View):
             ):
                 enemy.change_x *= -1
 
+    def update_shooting_animations(self):
+        """
+        Enable the player sprite to create and shoot a bullet sprite (there is
+        a slight cooldown to limit how frequently the player can shoot).
+        :return: None
+        """
+        if self.can_shoot and self.shoot_pressed:
+            arcade.play_sound(self.shoot_sound)
+
+            bullet = self.player_sprite.shoot_bullet()
+
+            self.scene.add_sprite(c.BULLETS_LAYER, bullet)
+            self.can_shoot = False
+        elif not self.can_shoot:
+            self.shoot_timer += 1
+
+            if self.shoot_timer == c.SHOOT_SPEED_PX_PER_FRAME:
+                self.can_shoot = True
+                self.shoot_timer = 0
+
     def update_animations(self, delta_time):
         """
         Updates the animations for the player sprite and scene objects.
-        :param delta_time: Time interval to use when updating animations
+        :param: delta_time: Time interval to use when updating animations
         """
         self.update_player_animations()
+        self.update_shooting_animations()
         self.scene.update_animation(
             delta_time,
             [c.COINS_LAYER, c.BACKGROUND_LAYER, c.PLAYER_LAYER, c.ENEMIES_LAYER]
         )
 
-        self.scene.update([c.MOVING_PLATFORMS_LAYER, c.ENEMIES_LAYER])
+        self.scene.update(
+            [c.MOVING_PLATFORMS_LAYER, c.ENEMIES_LAYER, c.BULLETS_LAYER]
+        )
+
         self.check_enemy_boundaries()
 
     def collect_coin(self, coin_sprite):
@@ -278,11 +317,28 @@ class GameView(arcade.View):
         arcade.play_sound(self.coin_sound)
         coin_sprite.remove_from_sprite_lists()
 
-    def check_collisions(self):
+    def shoot_enemy(self, enemy):
+        """
+        Called when a bullet hits an enemy. Decrements the enemy's health by the
+        BULLET_DAMAGE constant. If the enemy's health reaches 0, the enemy sprite
+        is removed and the player's core is incremented by the enemy's points
+        property.
+        :param enemy: The enemy sprite hit by the bullet.
+        :return: None
+        """
+        arcade.play_sound(self.hit_sound)
+        enemy.health -= c.BULLET_DAMAGE
+
+        if enemy.health <= 0:
+            enemy.remove_from_sprite_lists()
+            self.score += enemy.points
+
+    def check_player_collisions(self):
         """
         Checks whether the player sprite has collided with any coin sprites or
         enemy sprites. If the player has touched a coin, the coin is 'collected',
         but if the player has touched an enemy, the game is over.
+        :return: None
         """
         player_collision_list = arcade.check_for_collision_with_lists(
             self.player_sprite,
@@ -295,6 +351,29 @@ class GameView(arcade.View):
                 return
             elif self.scene[c.COINS_LAYER] in sprite.sprite_lists:
                 self.collect_coin(sprite)
+
+    def check_bullet_hits(self):
+        """
+        If a bullet sprite has collided with a platform or an enemy, remove the
+        bullet and check whether the bullet has hit an enemy.
+        :return:
+        """
+        for bullet in self.scene[c.BULLETS_LAYER]:
+            hit_list = arcade.check_for_collision_with_lists(
+                bullet,
+                [
+                    self.scene[c.ENEMIES_LAYER],
+                    self.scene[c.PLATFORMS_LAYER],
+                    self.scene[c.MOVING_PLATFORMS_LAYER]
+                ]
+            )
+
+            if hit_list:
+                bullet.remove_from_sprite_lists()
+
+                for sprite in hit_list:
+                    if self.scene[c.ENEMIES_LAYER] in sprite.sprite_lists:
+                        self.shoot_enemy(sprite)
 
     def on_show_view(self):
         """
@@ -329,6 +408,8 @@ class GameView(arcade.View):
             self.left_pressed = True
         elif symbol == arcade.key.RIGHT or symbol == arcade.key.D:
             self.right_pressed = True
+        elif symbol == arcade.key.Q:
+            self.shoot_pressed = True
 
         self.update_player_movement()
 
@@ -348,6 +429,8 @@ class GameView(arcade.View):
             self.left_pressed = False
         elif _symbol == arcade.key.RIGHT or _symbol == arcade.key.D:
             self.right_pressed = False
+        elif _symbol == arcade.key.Q:
+            self.shoot_pressed = False
 
         self.update_player_movement()
 
@@ -359,7 +442,8 @@ class GameView(arcade.View):
         """
         self.physics_engine.update()
         self.update_animations(delta_time)
-        self.check_collisions()
+        self.check_player_collisions()
+        self.check_bullet_hits()
 
         if self.player_sprite.center_y < c.OFF_MAP_Y:
             self.game_over()
