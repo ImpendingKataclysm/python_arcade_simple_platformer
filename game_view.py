@@ -5,7 +5,6 @@ import utils
 import constants as c
 from player_sprite import PlayerSprite
 from timer import Timer
-from enemies import RobotEnemy, ZombieEnemy
 
 
 class GameView(arcade.View):
