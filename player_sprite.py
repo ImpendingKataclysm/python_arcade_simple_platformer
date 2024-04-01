@@ -73,8 +73,8 @@ class PlayerSprite(CharacterSprite):
 
     def update_animation(self, delta_time: float = 1 / 60):
         """
-        Update the player sprite's animation depending on the direction it's
-        facing and whether it is walking, jumping, climbing or falling.
+        Update the player sprite's animation depending on the direction it
+        is facing and whether it is walking, jumping, climbing or falling.
         :param delta_time:
         :return: None
         """
