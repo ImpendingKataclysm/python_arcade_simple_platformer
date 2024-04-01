@@ -31,6 +31,8 @@ class CharacterSprite(arcade.Sprite):
 
         # Walk animation textures
         self.walk_textures = utils.load_walk_textures(self.main_path)
+        self.should_update_walk = 0
+        self.walk_update_interval = 0
 
         # Climb animation textures
         self.climb_texture_pair = utils.load_climb_textures(self.main_path)
@@ -57,3 +59,21 @@ class CharacterSprite(arcade.Sprite):
             self.texture = self.idle_texture_pair[self.direction]
             return True
         return False
+
+    def set_walk_animation(self):
+        """
+        Update the player sprite's walk texture to cycle through the list of
+        walk textures.
+        """
+        if self.should_update_walk == self.walk_update_interval:
+            self.cur_texture_index += 1
+
+            if self.cur_texture_index >= c.WALK_TEXTURES_TOTAL:
+                self.cur_texture_index = 0
+
+            self.texture = self.walk_textures[self.cur_texture_index][self.direction]
+            self.should_update_walk = 0
+
+            return
+
+        self.should_update_walk += 1

@@ -12,6 +12,7 @@ class PlayerSprite(CharacterSprite):
         self.is_on_ladder = False
         self.jumping = False
         self.climbing = False
+        self.walk_update_interval = 2
 
     def set_jump_animation(self):
         """
@@ -59,17 +60,6 @@ class PlayerSprite(CharacterSprite):
             ]
 
         return self.climbing
-
-    def set_walk_animation(self):
-        """
-        Update the player sprite's walk texture to cycle through the list of
-        walk textures.
-        """
-        self.cur_texture_index += 1
-        if self.cur_texture_index >= c.WALK_TEXTURES_TOTAL:
-            self.cur_texture_index = 0
-
-        self.texture = self.walk_textures[self.cur_texture_index][self.direction]
 
     def update_animation(self, delta_time: float = 1 / 60):
         """
