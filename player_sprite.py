@@ -78,23 +78,14 @@ class PlayerSprite(CharacterSprite):
         :param delta_time:
         :return: None
         """
-        # Determine the sprite's direction
         self.set_face_direction()
 
-        # Jumping animation
-        if self.set_jump_animation():
-            return
-        # Falling animation
-        elif self.set_fall_animation():
-            return
-
-        # Climbing animation
-        if self.set_climb_animation():
+        if (
+            self.set_jump_animation()
+            or self.set_fall_animation()
+            or self.set_climb_animation()
+            or self.set_idle_animation()
+        ):
             return
 
-        # Idle animation
-        if self.set_idle_animation():
-            return
-
-        # Walking animation
         self.set_walk_animation()

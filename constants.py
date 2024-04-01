@@ -20,6 +20,7 @@ PLAYER_LAYER = 'Player'
 BACKGROUND_LAYER = 'Background'
 LADDERS_LAYER = 'Ladders'
 MOVING_PLATFORMS_LAYER = 'Moving Platforms'
+ENEMIES_LAYER = 'Enemies'
 COINS_POINTS_PROP = 'Points'
 
 # Sprite Scaling
@@ -32,6 +33,8 @@ PLAYER_SPRITE_FOLDER = 'female_adventurer'
 PLAYER_SPRITE_FILE = 'femaleAdventurer'
 PLAYER_START_X = 2
 PLAYER_START_Y = 2
+ROBOT_SPRITE_NAME = 'robot'
+ZOMBIE_SPRITE_NAME = 'zombie'
 
 # Sprite Movement
 PLAYER_RUN_SPEED_PX_PER_FRAME = 5
@@ -58,3 +61,5 @@ GUI_TEXT_START_Y = 10
 SCORE_TEXT_START_X = 10
 COIN_TEXT_START_X = 175
 TIMER_TEXT_START_X = 400
+SCORE_LABEL = 'Score'
+COINS_LABEL = 'Coins'

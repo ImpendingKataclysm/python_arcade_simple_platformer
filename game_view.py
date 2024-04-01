@@ -1,8 +1,11 @@
 import arcade
 import os
+import math
+import utils
 import constants as c
 from player_sprite import PlayerSprite
 from timer import Timer
+from enemies import RobotEnemy, ZombieEnemy
 
 
 class GameView(arcade.View):
@@ -81,32 +84,71 @@ class GameView(arcade.View):
         if self.tile_map.background_color:
             arcade.set_background_color(self.tile_map.background_color)
 
+    def set_sprite_position(self, start_x, start_y):
+        """
+        Calculates a sprite's starting position on the map based on the
+        TILE_SCALING constant and the tile map's tile_width and tile_height
+        properties.
+        :param start_x: The sprite's starting x-coordinate before adjusting to
+        the tile map.
+        :param start_y: The sprite's starting y-coordinate before adjusting to
+        the tile map.
+        :return: A list containing the sprite's adjusted x- and y-coordinates.
+        """
+        x = math.floor(start_x * c.TILE_SCALING * self.tile_map.tile_width)
+        y = math.floor(start_y * c.TILE_SCALING * self.tile_map.tile_height)
+
+        return [x, y]
+
     def create_player_sprite(self):
         """
         Creates a sprite for the player, calculates its starting coordinates
         and adds it to the scene.
         """
         self.player_sprite = PlayerSprite()
-        self.player_start_x = c.PLAYER_START_X * c.TILE_SCALING * self.tile_map.tile_width
-        self.player_start_y = c.PLAYER_START_Y * c.TILE_SCALING * self.tile_map.tile_height
-        self.player_sprite.center_x = self.player_start_x
-        self.player_sprite.center_y = self.player_start_y
+        self.player_sprite.position = self.set_sprite_position(
+            c.PLAYER_START_X,
+            c.PLAYER_START_Y
+        )
+
         self.scene.add_sprite(c.PLAYER_LAYER, self.player_sprite)
+
+    def create_enemy_sprites(self):
+        """
+        Add enemy sprites to the map.
+        """
+        enemies_layer = self.tile_map.object_lists[c.ENEMIES_LAYER]
+
+        for sprite in enemies_layer:
+            cartesian = self.tile_map.get_cartesian(
+                sprite.shape[0],
+                sprite.shape[1]
+            )
+
+            enemy = utils.create_enemy(sprite)
+            enemy.position = self.set_sprite_position(
+                cartesian[0],
+                cartesian[1] + 1
+            )
+
+            utils.move_inside_boundaries(sprite, enemy)
+
+            self.scene.add_sprite(c.ENEMIES_LAYER, enemy)
 
     def setup(self):
         """
         Sets the initial game state.
         """
-        # Create the game map and initialize the scene
         self.create_map()
 
-        # Set up the timer
+        self.main_camera = arcade.Camera(self.window.width, self.window.height)
+        self.gui_camera = arcade.Camera(self.window.width, self.window.height)
         self.timer = Timer()
+        self.score = 0
 
-        # Create the player sprite and set its initial coordinates
         self.create_player_sprite()
+        self.create_enemy_sprites()
 
-        # Create the physics engine
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
             platforms=self.scene[c.MOVING_PLATFORMS_LAYER],
@@ -115,15 +157,6 @@ class GameView(arcade.View):
             walls=self.scene[c.PLATFORMS_LAYER]
         )
 
-        # Create the main camera for the game viewport
-        self.main_camera = arcade.Camera(self.window.width, self.window.height)
-
-        # Create the camera for displaying data in the GUI
-        self.gui_camera = arcade.Camera(self.window.width, self.window.height)
-
-        # Set the player score to 0
-        self.score = 0
-
     def update_player_movement(self):
         """
         Moves the player sprite in response to keyboard inputs.
@@ -131,23 +164,17 @@ class GameView(arcade.View):
         self.player_sprite.change_x = 0
         self.player_sprite.change_y = 0
 
-        # Check for upward movement
         if self.up_pressed and not self.down_pressed:
-            # Check for a ladder
             if self.physics_engine.is_on_ladder():
                 self.player_sprite.change_y = c.PLAYER_RUN_SPEED_PX_PER_FRAME
-            # Check for ability to jump
             elif self.physics_engine.can_jump() and not self.jump_needs_reset:
                 self.player_sprite.change_y = c.PLAYER_JUMP_SPEED_PX_PER_FRAME
                 self.jump_needs_reset = True
                 arcade.play_sound(self.jump_sound)
-        # Check for downward movement
         elif self.down_pressed and not self.up_pressed:
-            # Check for ladder
             if self.physics_engine.is_on_ladder():
                 self.player_sprite.change_y = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
 
-        # Check for ladder with no movement
         if self.physics_engine.is_on_ladder():
             if (
                 (not self.up_pressed and not self.down_pressed)
@@ -155,10 +182,8 @@ class GameView(arcade.View):
             ):
                 self.player_sprite.change_y = 0
 
-        # Check for left movement
         if self.left_pressed and not self.right_pressed:
             self.player_sprite.change_x = -c.PLAYER_RUN_SPEED_PX_PER_FRAME
-        # Check for right movement
         elif self.right_pressed and not self.left_pressed:
             self.player_sprite.change_x = c.PLAYER_RUN_SPEED_PX_PER_FRAME
         else:
@@ -187,6 +212,77 @@ class GameView(arcade.View):
 
         self.main_camera.move_to(player_center, c.CAMERA_SPEED)
 
+    def game_over(self):
+        """
+        Play the game over sound effect and display the game over window.
+        """
+        arcade.play_sound(self.game_over_sound)
+        game_over = self.GameOverView()
+        self.window.show_view(game_over)
+
+    def update_player_animations(self):
+        """
+        Set the values of the player sprite's can_jump and is_on_ladder flags
+        based on the physics engine status.
+        """
+        if self.physics_engine.can_jump():
+            self.player_sprite.can_jump = False
+        else:
+            self.player_sprite.can_jump = True
+
+        if (
+                self.physics_engine.is_on_ladder()
+                and not self.physics_engine.can_jump()
+        ):
+            self.player_sprite.is_on_ladder = True
+            self.update_player_movement()
+        else:
+            self.player_sprite.is_on_ladder = False
+
+    def check_enemy_boundaries(self):
+        for enemy in self.scene[c.ENEMIES_LAYER]:
+            if (
+                enemy.boundary_right and
+                enemy.right > enemy.boundary_right and
+                enemy.change_x > 0
+            ) or (
+                enemy.boundary_left and
+                enemy.left < enemy.boundary_left and
+                enemy.change_x < 0
+            ):
+                enemy.change_x *= -1
+
+    def update_animations(self, delta_time):
+        """
+        Updates the animations for the player sprite and scene objects.
+        :param delta_time: Time interval to use when updating animations
+        """
+        self.update_player_animations()
+        self.scene.update_animation(
+            delta_time,
+            [c.COINS_LAYER, c.BACKGROUND_LAYER, c.PLAYER_LAYER, c.ENEMIES_LAYER]
+        )
+
+        self.scene.update([c.MOVING_PLATFORMS_LAYER, c.ENEMIES_LAYER])
+        self.check_enemy_boundaries()
+
+    def check_collisions(self):
+        """
+        Checks whether the player has collided with any coin sprites and collects
+        them if so.
+        """
+        player_collision_list = arcade.check_for_collision_with_lists(
+            self.player_sprite,
+            [self.scene[c.COINS_LAYER]]
+        )
+
+        for sprite in player_collision_list:
+            if self.scene[c.COINS_LAYER] in sprite.sprite_lists:
+                points = int(sprite.properties[c.COINS_POINTS_PROP])
+                self.score += points
+                arcade.play_sound(self.coin_sound)
+                sprite.remove_from_sprite_lists()
+
     def on_show_view(self):
         """
         Display the game in its initial state.
@@ -200,32 +296,10 @@ class GameView(arcade.View):
         self.clear()
         self.main_camera.use()
         self.scene.draw()
-
-        # Activate the GUI camera
         self.gui_camera.use()
-
-        # Display the score in the GUI
-        score_text = f'Score: {self.score}'
-        arcade.draw_text(
-            score_text,
-            c.SCORE_TEXT_START_X,
-            c.GUI_TEXT_START_Y,
-            arcade.csscolor.MINT_CREAM,
-            c.GUI_FONT_SIZE
-        )
-
-        # Display the number of coins remaining
+        utils.display_gui_text(c.SCORE_LABEL, self.score, c.SCORE_TEXT_START_X)
         coins_left = len(self.scene[c.COINS_LAYER])
-        coin_text = f'Coins left: {coins_left}'
-        arcade.draw_text(
-            coin_text,
-            c.COIN_TEXT_START_X,
-            c.GUI_TEXT_START_Y,
-            arcade.csscolor.MINT_CREAM,
-            c.GUI_FONT_SIZE
-        )
-
-        # Display the timer
+        utils.display_gui_text(c.COINS_LABEL, coins_left, c.COIN_TEXT_START_X)
         self.timer.timer_text.draw()
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -267,59 +341,18 @@ class GameView(arcade.View):
     def on_update(self, delta_time: float):
         """
         Update the physics engine and sprite animations.
-        :param delta_time:
+        :param delta_time: The time interval at which to update the animations
+        :return: None
         """
         self.physics_engine.update()
+        self.update_animations(delta_time)
+        self.check_collisions()
 
-        # Update player sprite jumping animation
-        if self.physics_engine.can_jump():
-            self.player_sprite.can_jump = False
-        else:
-            self.player_sprite.can_jump = True
-
-        # Update player sprite climbing animation
-        if self.physics_engine.is_on_ladder() and not self.physics_engine.can_jump():
-            self.player_sprite.is_on_ladder = True
-            self.update_player_movement()
-        else:
-            self.player_sprite.is_on_ladder = False
-
-        # Update scene object animations
-        self.scene.update_animation(
-            delta_time,
-            [
-                c.COINS_LAYER,
-                c.BACKGROUND_LAYER,
-                c.PLAYER_LAYER
-            ]
-        )
-
-        self.scene.update([c.MOVING_PLATFORMS_LAYER])
-
-        # Check if the player has collided with any enemies or coins
-        player_collision_list = arcade.check_for_collision_with_lists(
-            self.player_sprite,
-            [self.scene[c.COINS_LAYER]]
-        )
-
-        for sprite in player_collision_list:
-            # Check for coins
-            if self.scene[c.COINS_LAYER] in sprite.sprite_lists:
-                points = int(sprite.properties[c.COINS_POINTS_PROP])
-                self.score += points
-                arcade.play_sound(self.coin_sound)
-                sprite.remove_from_sprite_lists()
-
-        # Game over if the player falls off the map
         if self.player_sprite.center_y < c.OFF_MAP_Y:
-            arcade.play_sound(self.game_over_sound)
-            game_over = self.GameOverView()
-            self.window.show_view(game_over)
+            self.game_over()
             return
 
         self.center_camera_to_player()
-
-        # Update the timer
         self.timer.update(delta_time)
 
     class GameOverView(arcade.View):
